@@ -3,7 +3,9 @@ package com.github.lernejo.korekto.grader.travel_agency;
 import com.github.lernejo.korekto.grader.travel_agency.parts.Part1Grader;
 import com.github.lernejo.korekto.grader.travel_agency.parts.Part2Grader;
 import com.github.lernejo.korekto.grader.travel_agency.parts.PartGrader;
-import com.github.lernejo.korekto.toolkit.*;
+import com.github.lernejo.korekto.toolkit.GradePart;
+import com.github.lernejo.korekto.toolkit.Grader;
+import com.github.lernejo.korekto.toolkit.GradingConfiguration;
 import com.github.lernejo.korekto.toolkit.misc.HumanReadableDuration;
 import com.github.lernejo.korekto.toolkit.misc.SubjectForToolkitInclusion;
 import com.github.lernejo.korekto.toolkit.thirdparty.git.GitContext;
@@ -19,14 +21,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @SubjectForToolkitInclusion
-public class TravelAgencyGrader implements Grader {
+public class TravelAgencyGrader implements Grader<LaunchingContext> {
 
     private final Logger logger = LoggerFactory.getLogger(TravelAgencyGrader.class);
 
     private final Retrofit retrofit = new Retrofit.Builder()
-            .baseUrl("http://localhost:8085/")
-            .addConverterFactory(JacksonConverterFactory.create())
-            .build();
+        .baseUrl("http://localhost:8085/")
+        .addConverterFactory(JacksonConverterFactory.create())
+        .build();
 
     public final TravelAgencyApiClient client = retrofit.create(TravelAgencyApiClient.class);
 
@@ -41,32 +43,30 @@ public class TravelAgencyGrader implements Grader {
     }
 
     @Override
-    public void run(GradingConfiguration gradingConfiguration, GradingContext context) {
+    public void run(LaunchingContext context) {
         Optional<GitNature> optionalGitNature = context.getExercise().lookupNature(GitNature.class);
         if (optionalGitNature.isEmpty()) {
             context.getGradeDetails().getParts().add(new GradePart("exercise", 0D, 12D, List.of("Not a Git project")));
         } else {
-            GitNature gitNature = optionalGitNature.get();
-            context.getGradeDetails().getParts().addAll(gitNature.withContext(c -> grade(gradingConfiguration, context.getExercise(), c)));
+            context.getGradeDetails().getParts().addAll(grade(context));
         }
     }
 
-    @SubjectForToolkitInclusion(additionalInfo = "as an overridable method `Grader#context()` and GradingContext should be overridable")
-    public LaunchingContext launchingContext() {
-        return new LaunchingContext(client);
+    @Override
+    public LaunchingContext gradingContext(GradingConfiguration configuration) {
+        return new LaunchingContext(configuration, client);
     }
 
-    private Collection<? extends GradePart> grade(GradingConfiguration configuration, Exercise exercise, GitContext gitContext) {
-        LaunchingContext context = launchingContext();
+    private Collection<? extends GradePart> grade(LaunchingContext context) {
         return graders().stream()
-                .map(g -> applyPartGrader(configuration, exercise, gitContext, context, g))
-                .collect(Collectors.toList());
+            .map(g -> applyPartGrader(context, g))
+            .collect(Collectors.toList());
     }
 
-    private GradePart applyPartGrader(GradingConfiguration configuration, Exercise exercise, GitContext gitContext, LaunchingContext context, PartGrader g) {
+    private GradePart applyPartGrader(LaunchingContext context, PartGrader g) {
         long startTime = System.currentTimeMillis();
         try {
-            return g.grade(configuration, exercise, context, gitContext);
+            return g.grade(context);
         } finally {
             logger.debug(g.name() + " in " + HumanReadableDuration.toString(System.currentTimeMillis() - startTime));
         }
@@ -74,8 +74,8 @@ public class TravelAgencyGrader implements Grader {
 
     private Collection<? extends PartGrader> graders() {
         return List.of(
-                new Part1Grader(),
-                new Part2Grader()
+            new Part1Grader(),
+            new Part2Grader()
         );
     }
 }

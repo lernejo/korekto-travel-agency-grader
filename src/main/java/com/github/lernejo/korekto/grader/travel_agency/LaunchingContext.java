@@ -1,14 +1,15 @@
 package com.github.lernejo.korekto.grader.travel_agency;
 
-import com.github.lernejo.korekto.toolkit.misc.SubjectForToolkitInclusion;
+import com.github.lernejo.korekto.toolkit.GradingConfiguration;
+import com.github.lernejo.korekto.toolkit.GradingContext;
 
-@SubjectForToolkitInclusion
-public class LaunchingContext {
-    private final TravelAgencyApiClient client;
+public class LaunchingContext extends GradingContext {
+    public final TravelAgencyApiClient client;
     public boolean compilationFailed;
     public boolean testFailed;
 
-    LaunchingContext(TravelAgencyApiClient client) {
+    LaunchingContext(GradingConfiguration configuration, TravelAgencyApiClient client) {
+        super(configuration);
         this.client = client;
     }
 }

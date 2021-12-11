@@ -22,7 +22,7 @@ public interface PartGrader {
         return 0.0D;
     }
 
-    GradePart grade(GradingConfiguration configuration, Exercise exercise, LaunchingContext context, GitContext gitContext);
+    GradePart grade(LaunchingContext context);
 
     default GradePart result(List<String> explanations, double grade) {
         return new GradePart(name(), Math.min(Math.max(minGrade(), grade), maxGrade()), maxGrade(), explanations);

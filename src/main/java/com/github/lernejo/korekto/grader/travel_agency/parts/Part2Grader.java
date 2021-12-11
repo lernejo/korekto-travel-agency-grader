@@ -1,10 +1,7 @@
 package com.github.lernejo.korekto.grader.travel_agency.parts;
 
 import com.github.lernejo.korekto.grader.travel_agency.LaunchingContext;
-import com.github.lernejo.korekto.toolkit.Exercise;
 import com.github.lernejo.korekto.toolkit.GradePart;
-import com.github.lernejo.korekto.toolkit.GradingConfiguration;
-import com.github.lernejo.korekto.toolkit.thirdparty.git.GitContext;
 import com.github.lernejo.korekto.toolkit.thirdparty.github.GitHubNature;
 import com.github.lernejo.korekto.toolkit.thirdparty.github.WorkflowRun;
 import com.github.lernejo.korekto.toolkit.thirdparty.github.WorkflowRunConclusion;
@@ -29,8 +26,8 @@ public class Part2Grader implements PartGrader {
     }
 
     @Override
-    public GradePart grade(GradingConfiguration configuration, Exercise exercise, LaunchingContext context, GitContext gitContext) {
-        Optional<GitHubNature> gitHubNature = exercise.lookupNature(GitHubNature.class);
+    public GradePart grade(LaunchingContext context) {
+        Optional<GitHubNature> gitHubNature = context.getExercise().lookupNature(GitHubNature.class);
         if (gitHubNature.isEmpty()) {
             return result(List.of("Not a GitHub project"), 0D);
         }
@@ -41,7 +38,7 @@ public class Part2Grader implements PartGrader {
             .filter(wr -> mainBranchNames.contains(wr.getHead_branch()))
             .collect(Collectors.toList());
         if (mainRuns.isEmpty()) {
-            return result(List.of("No CI runs for main branch, check https://github.com/" + exercise.getName() + "/actions"), 0D);
+            return result(List.of("No CI runs for main branch, check https://github.com/" + context.getExercise().getName() + "/actions"), 0D);
         } else {
             WorkflowRun latestRun = mainRuns.get(0);
             if (latestRun.getConclusion() != WorkflowRunConclusion.success) {

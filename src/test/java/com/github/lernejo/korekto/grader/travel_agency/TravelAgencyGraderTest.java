@@ -38,30 +38,30 @@ class TravelAgencyGraderTest {
 
         AtomicReference<GradingContext> contextHolder = new AtomicReference<>();
         new GradingJob()
-                .addCloneStep()
-                .addStep("switch-branch",
-                        (conf, context) -> context
-                                .getExercise()
-                                .lookupNature(GitNature.class)
-                                .get()
-                                .inContext(git -> git.checkout(branchName)))
-                .addStep("grading", grader)
-                .addStep("report", (conf, context) -> contextHolder.set(context))
-                .run(configuration);
+            .addCloneStep()
+            .addStep("switch-branch",
+                (context) -> context
+                    .getExercise()
+                    .lookupNature(GitNature.class)
+                    .get()
+                    .inContext(git -> git.checkout(branchName)))
+            .addStep("grading", grader)
+            .addStep("report", context -> contextHolder.set(context))
+            .run(configuration, grader::gradingContext);
 
         assertThat(contextHolder)
-                .as("Grading context")
-                .hasValueMatching(Objects::nonNull, "is present");
+            .as("Grading context")
+            .hasValueMatching(Objects::nonNull, "is present");
 
         assertThat(contextHolder.get().getGradeDetails().getParts()).containsExactlyElementsOf(expectedGradeParts);
     }
 
     static Stream<Arguments> branches() {
         return Stream.of(
-                arguments("Initial state after using the template", "main", List.of(
-                        new GradePart("Part 1 - Compilation & Tests", 4.0D, 4.0D, List.of()),
-                        new GradePart("Part 2 - CI", 2.0D, 2.0D, List.of())
-                ))
+            arguments("Initial state after using the template", "main", List.of(
+                new GradePart("Part 1 - Compilation & Tests", 4.0D, 4.0D, List.of()),
+                new GradePart("Part 2 - CI", 2.0D, 2.0D, List.of())
+            ))
         );
     }
 }
