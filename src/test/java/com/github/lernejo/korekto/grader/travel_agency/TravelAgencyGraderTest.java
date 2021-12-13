@@ -2,8 +2,9 @@ package com.github.lernejo.korekto.grader.travel_agency;
 
 import com.github.lernejo.korekto.toolkit.*;
 import com.github.lernejo.korekto.toolkit.misc.OS;
+import com.github.lernejo.korekto.toolkit.misc.Processes;
 import com.github.lernejo.korekto.toolkit.thirdparty.git.GitNature;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -21,11 +22,13 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 class TravelAgencyGraderTest {
 
-    private final Path workspace = Paths.get("target/test_repositories");
+    private static final Path workspace = Paths.get("target/test_repositories").toAbsolutePath();
 
-    @BeforeEach
-    void setUp() {
-        OS.Companion.getCURRENT_OS().deleteDirectoryCommand(workspace);
+    @BeforeAll
+    static void setUp() {
+        Processes.launch(OS.Companion.getCURRENT_OS().deleteDirectoryCommand(workspace.resolve("lernejo")), null);
+        LaunchingContext.RANDOM = i -> 2;
+        System.setProperty("SERVER_START_TIMEOUT", "20");
     }
 
     @ParameterizedTest(name = "(branch={1}) {0}")
@@ -44,7 +47,9 @@ class TravelAgencyGraderTest {
                     .getExercise()
                     .lookupNature(GitNature.class)
                     .get()
-                    .inContext(git -> git.checkout(branchName)))
+                    .inContext(git -> {
+                        git.checkout(branchName);
+                    }))
             .addStep("grading", grader)
             .addStep("report", context -> contextHolder.set(context))
             .run(configuration, grader::gradingContext);
@@ -60,7 +65,72 @@ class TravelAgencyGraderTest {
         return Stream.of(
             arguments("Initial state after using the template", "main", List.of(
                 new GradePart("Part 1 - Compilation & Tests", 4.0D, 4.0D, List.of()),
-                new GradePart("Part 2 - CI", 2.0D, 2.0D, List.of())
+                new GradePart("Part 2 - CI", 2.0D, 2.0D, List.of()),
+                new GradePart("Part 3 - Code Coverage", 4.0D, 4.0D, List.of()),
+                new GradePart("Part 4 - Prediction API", 2.0D, 2.0D, List.of())
+            ))
+            ,
+            arguments("Missing POM", "fail/part1/missing_pom", List.of(
+                new GradePart("Part 1 - Compilation & Tests", 0.0D, 4.0D, List.of("Not a Maven project")),
+                new GradePart("Part 2 - CI", 1.0D, 2.0D, List.of("Latest CI run of branch `fail/part1/missing_pom` was expected to be in *success* state but found: failure")),
+                new GradePart("Part 3 - Code Coverage", 0.0D, 4.0D, List.of("Coverage not available when there is test failures")),
+                new GradePart("Part 4 - Prediction API", 0.0D, 2.0D, List.of("Not trying to start **prediction-engine** server as compilation failed"))
+            ))
+            ,
+            arguments("Compilation failure", "fail/part1/compilation_failure", List.of(
+                new GradePart("Part 1 - Compilation & Tests", 0.0D, 4.0D, List.of("Compilation failed, see `mvn test-compile`")),
+                new GradePart("Part 2 - CI", 1.0D, 2.0D, List.of("Latest CI run of branch `fail/part1/compilation_failure` was expected to be in *success* state but found: failure")),
+                new GradePart("Part 3 - Code Coverage", 0.0D, 4.0D, List.of("Coverage not available when there is test failures")),
+                new GradePart("Part 4 - Prediction API", 0.0D, 2.0D, List.of("Not trying to start **prediction-engine** server as compilation failed"))
+            ))
+            ,
+            arguments("Test failure", "fail/part1/test_failure", List.of(
+                new GradePart("Part 1 - Compilation & Tests", 2.0D, 4.0D, List.of("There are test failures, see `mvn verify`")),
+                new GradePart("Part 2 - CI", 1.0D, 2.0D, List.of("Latest CI run of branch `fail/part1/test_failure` was expected to be in *success* state but found: failure")),
+                new GradePart("Part 3 - Code Coverage", 0.0D, 4.0D, List.of("Coverage not available when there is test failures")),
+                new GradePart("Part 4 - Prediction API", 0.0D, 2.0D, List.of("Unsuccessful response of GET `/api/temperature?country=France`: 404"))
+            ))
+            ,
+            arguments("Partial code coverage", "fail/part3/partial_coverage", List.of(
+                new GradePart("Part 1 - Compilation & Tests", 4.0D, 4.0D, List.of()),
+                new GradePart("Part 2 - CI", 2.0D, 2.0D, List.of()),
+                new GradePart("Part 3 - Code Coverage", 2.93D, 4.0D, List.of("Code coverage: 55.0%, expected: > 80% with `mvn verify`")),
+                new GradePart("Part 4 - Prediction API", 0.0D, 2.0D, List.of("Unsuccessful response of GET `/api/temperature?country=France`: 404"))
+            ))
+            ,
+            arguments("No code coverage", "fail/part3/no_coverage", List.of(
+                new GradePart("Part 1 - Compilation & Tests", 4.0D, 4.0D, List.of()),
+                new GradePart("Part 2 - CI", 2.0D, 2.0D, List.of()),
+                new GradePart("Part 3 - Code Coverage", 0.0D, 4.0D, List.of("No JaCoCo report produced after `mvn verify`, check tests and plugins")),
+                new GradePart("Part 4 - Prediction API", 0.0D, 2.0D, List.of("Unsuccessful response of GET `/api/temperature?country=France`: 404"))
+            ))
+            ,
+            arguments("Prediction API: different country", "fail/part4/different_country", List.of(
+                new GradePart("Part 1 - Compilation & Tests", 4.0D, 4.0D, List.of()),
+                new GradePart("Part 2 - CI", 2.0D, 2.0D, List.of()),
+                new GradePart("Part 3 - Code Coverage", 4.0D, 4.0D, List.of()),
+                new GradePart("Part 4 - Prediction API", 1.0D, 2.0D, List.of("GET `/api/temperature?country=France` should respond with a message containing the same country that was passed in the query, expected `France` but get `another_country`"))
+            ))
+            ,
+            arguments("Prediction API: wrong number of temperature points", "fail/part4/wrong_number_of_temperatures", List.of(
+                new GradePart("Part 1 - Compilation & Tests", 4.0D, 4.0D, List.of()),
+                new GradePart("Part 2 - CI", 2.0D, 2.0D, List.of()),
+                new GradePart("Part 3 - Code Coverage", 4.0D, 4.0D, List.of()),
+                new GradePart("Part 4 - Prediction API", 1.0D, 2.0D, List.of("GET `/api/temperature?country=France` should respond with a message containing temperatures of the last *two* days, but got 1 temperature(s)"))
+            ))
+            ,
+            arguments("Prediction API: out of range temperature", "fail/part4/out_of_range_temperature", List.of(
+                new GradePart("Part 1 - Compilation & Tests", 4.0D, 4.0D, List.of()),
+                new GradePart("Part 2 - CI", 2.0D, 2.0D, List.of()),
+                new GradePart("Part 3 - Code Coverage", 4.0D, 4.0D, List.of()),
+                new GradePart("Part 4 - Prediction API", 1.0D, 2.0D, List.of("GET `/api/temperature?country=France` should respond with temperatures generated from the given `countriesTempData.csv` file, however got a temperature of `666.0` for **France** whereas it should be between `8.0` and `32.0`"))
+            ))
+            ,
+            arguments("Prediction API: no server", "fail/part4/no_server_started", List.of(
+                new GradePart("Part 1 - Compilation & Tests", 4.0D, 4.0D, List.of()),
+                new GradePart("Part 2 - CI", 2.0D, 2.0D, List.of()),
+                new GradePart("Part 3 - Code Coverage", 4.0D, 4.0D, List.of()),
+                new GradePart("Part 4 - Prediction API", 0.0D, 2.0D, List.of("Server failed to start within 20 sec."))
             ))
         );
     }

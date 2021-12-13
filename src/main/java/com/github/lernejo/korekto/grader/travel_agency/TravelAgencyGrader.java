@@ -1,14 +1,11 @@
 package com.github.lernejo.korekto.grader.travel_agency;
 
-import com.github.lernejo.korekto.grader.travel_agency.parts.Part1Grader;
-import com.github.lernejo.korekto.grader.travel_agency.parts.Part2Grader;
-import com.github.lernejo.korekto.grader.travel_agency.parts.PartGrader;
+import com.github.lernejo.korekto.grader.travel_agency.parts.*;
 import com.github.lernejo.korekto.toolkit.GradePart;
 import com.github.lernejo.korekto.toolkit.Grader;
 import com.github.lernejo.korekto.toolkit.GradingConfiguration;
 import com.github.lernejo.korekto.toolkit.misc.HumanReadableDuration;
 import com.github.lernejo.korekto.toolkit.misc.SubjectForToolkitInclusion;
-import com.github.lernejo.korekto.toolkit.thirdparty.git.GitContext;
 import com.github.lernejo.korekto.toolkit.thirdparty.git.GitNature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,12 +22,20 @@ public class TravelAgencyGrader implements Grader<LaunchingContext> {
 
     private final Logger logger = LoggerFactory.getLogger(TravelAgencyGrader.class);
 
-    private final Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl("http://localhost:8085/")
-        .addConverterFactory(JacksonConverterFactory.create())
-        .build();
+    public static final int SITE_PORT = 8085;
+    public static final int PREDICTION_ENGINE_PORT = 8075;
 
-    public final TravelAgencyApiClient client = retrofit.create(TravelAgencyApiClient.class);
+    public final TravelAgencyApiClient travelAgencyApiClient = new Retrofit.Builder()
+        .baseUrl("http://localhost:" + SITE_PORT + "/")
+        .addConverterFactory(JacksonConverterFactory.create())
+        .build()
+        .create(TravelAgencyApiClient.class);
+
+    public final PredictionApiClient predictionApiClient = new Retrofit.Builder()
+        .baseUrl("http://localhost:" + PREDICTION_ENGINE_PORT + "/")
+        .addConverterFactory(JacksonConverterFactory.create())
+        .build()
+        .create(PredictionApiClient.class);
 
     @Override
     public String slugToRepoUrl(String slug) {
@@ -54,7 +59,7 @@ public class TravelAgencyGrader implements Grader<LaunchingContext> {
 
     @Override
     public LaunchingContext gradingContext(GradingConfiguration configuration) {
-        return new LaunchingContext(configuration, client);
+        return new LaunchingContext(configuration, travelAgencyApiClient, predictionApiClient);
     }
 
     private Collection<? extends GradePart> grade(LaunchingContext context) {
@@ -75,7 +80,9 @@ public class TravelAgencyGrader implements Grader<LaunchingContext> {
     private Collection<? extends PartGrader> graders() {
         return List.of(
             new Part1Grader(),
-            new Part2Grader()
+            new Part2Grader(),
+            new Part3Grader(),
+            new Part4Grader()
         );
     }
 }
