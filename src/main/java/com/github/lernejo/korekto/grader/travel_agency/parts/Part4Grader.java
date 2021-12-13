@@ -57,11 +57,14 @@ public class Part4Grader implements PartGrader {
 
             TempBoundaries tempBoundaries = Part4Grader.tempBoundaries.get(LaunchingContext.RANDOM.nextInt(Part4Grader.tempBoundaries.size() - 1));
             String query = "GET `/api/temperature?country=" + tempBoundaries.country + "`";
-            try {
+            try (var exHolder = context.newExceptionHolder()) {
                 Response<PredictionApiClient.Prediction> response = context.predictionApiClient.getTemperature(tempBoundaries.country).execute();
                 if (!response.isSuccessful()) {
                     grade = 0;
                     errors.add("Unsuccessful response of " + query + ": " + response.code());
+                } else if (exHolder.getLatestDeserializationProblem() != null) {
+                    grade -= maxGrade() * (2.0 / 3);
+                    errors.add("Bad response payload expected something like:\n```\n" + PredictionApiClient.SAMPLE_RESPONSE_PAYLOAD + "\n```\nBut got:\n```\n" + exHolder.getLatestDeserializationProblem().rawBody() + "\n```");
                 } else {
                     if (!tempBoundaries.country.equalsIgnoreCase(response.body().country())) {
                         grade -= maxGrade() / 2;

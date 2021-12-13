@@ -13,7 +13,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
@@ -39,6 +38,16 @@ class TravelAgencyGraderTest {
         String repoUrl = grader.slugToRepoUrl("lernejo");
         GradingConfiguration configuration = new GradingConfiguration(repoUrl, "", "", workspace);
 
+        GradingContext context = execute(branchName, grader, configuration);
+
+        assertThat(context)
+            .as("Grading context")
+            .isNotNull();
+
+        assertThat(context.getGradeDetails().getParts()).containsExactlyElementsOf(expectedGradeParts);
+    }
+
+    private GradingContext execute(String branchName, Grader grader, GradingConfiguration configuration) {
         AtomicReference<GradingContext> contextHolder = new AtomicReference<>();
         new GradingJob()
             .addCloneStep()
@@ -53,12 +62,7 @@ class TravelAgencyGraderTest {
             .addStep("grading", grader)
             .addStep("report", context -> contextHolder.set(context))
             .run(configuration, grader::gradingContext);
-
-        assertThat(contextHolder)
-            .as("Grading context")
-            .hasValueMatching(Objects::nonNull, "is present");
-
-        assertThat(contextHolder.get().getGradeDetails().getParts()).containsExactlyElementsOf(expectedGradeParts);
+        return contextHolder.get();
     }
 
     static Stream<Arguments> branches() {
@@ -131,6 +135,32 @@ class TravelAgencyGraderTest {
                 new GradePart("Part 2 - CI", 2.0D, 2.0D, List.of()),
                 new GradePart("Part 3 - Code Coverage", 4.0D, 4.0D, List.of()),
                 new GradePart("Part 4 - Prediction API", 0.0D, 2.0D, List.of("Server failed to start within 20 sec."))
+            ))
+            ,
+            arguments("Prediction API: bad response type", "fail/part4/invalid_api_response_type", List.of(
+                new GradePart("Part 1 - Compilation & Tests", 4.0D, 4.0D, List.of()),
+                new GradePart("Part 2 - CI", 2.0D, 2.0D, List.of()),
+                new GradePart("Part 3 - Code Coverage", 4.0D, 4.0D, List.of()),
+                new GradePart("Part 4 - Prediction API", 0.6666666666666667, 2.0D, List.of("""
+                    Bad response payload expected something like:
+                    ```
+                    {
+                        "country": "a country",
+                        "temperatures: [
+                            {
+                                "date": "2021-12-16",
+                                "temperature": 3.25
+                            }, {
+                                "date": "2021-12-15",
+                                "temperature": 7.52
+                            }
+                        ]
+                    }
+                    ```
+                    But got:
+                    ```
+                    66.6
+                    ```"""))
             ))
         );
     }

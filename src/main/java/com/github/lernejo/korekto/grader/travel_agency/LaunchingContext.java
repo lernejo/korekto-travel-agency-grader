@@ -4,6 +4,7 @@ import com.github.lernejo.korekto.toolkit.GradingConfiguration;
 import com.github.lernejo.korekto.toolkit.GradingContext;
 
 import java.util.Random;
+import java.util.function.Supplier;
 
 public class LaunchingContext extends GradingContext {
     private static final Random r = new Random();
@@ -12,14 +13,16 @@ public class LaunchingContext extends GradingContext {
 
     public final TravelAgencyApiClient travelAgencyApiClient;
     public final PredictionApiClient predictionApiClient;
+    private final Supplier<SilentJacksonConverterFactory.ExceptionHolder> exceptionHolderSupplier;
     private boolean compilationFailed;
     private boolean testFailed;
     private boolean predictionServerFailed;
 
-    LaunchingContext(GradingConfiguration configuration, TravelAgencyApiClient travelAgencyApiClient, PredictionApiClient predictionApiClient) {
+    LaunchingContext(GradingConfiguration configuration, TravelAgencyApiClient travelAgencyApiClient, PredictionApiClient predictionApiClient, Supplier<SilentJacksonConverterFactory.ExceptionHolder> exceptionHolderSupplier) {
         super(configuration);
         this.travelAgencyApiClient = travelAgencyApiClient;
         this.predictionApiClient = predictionApiClient;
+        this.exceptionHolderSupplier = exceptionHolderSupplier;
     }
 
     public void setCompilationFailed() {
@@ -42,5 +45,9 @@ public class LaunchingContext extends GradingContext {
 
     public boolean testFailed() {
         return testFailed;
+    }
+
+    public SilentJacksonConverterFactory.ExceptionHolder newExceptionHolder() {
+        return exceptionHolderSupplier.get();
     }
 }
