@@ -1,0 +1,22 @@
+  [GradePart(id=Part 1 - Compilation & Tests, grade=4.0, maxGrade=4.0, comments=[]),
+    GradePart(id=Part 2 - CI, grade=2.0, maxGrade=2.0, comments=[]),
+    GradePart(id=Part 3 - Code Coverage, grade=4.0, maxGrade=4.0, comments=[]),
+    GradePart(id=Part 4 - Prediction API, grade=0.6666666666666667, maxGrade=2.0, comments=[Bad response payload expected something like:
+```
+{
+    "country": "a country",
+    "temperatures: [
+        {
+            "date": "2021-12-16",
+            "temperature": 3.25
+        }, {
+            "date": "2021-12-15",
+            "temperature": 7.52
+        }
+    ]
+}
+```
+But got:
+```
+66.6
+```])]

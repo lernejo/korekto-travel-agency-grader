@@ -2,6 +2,7 @@ package com.github.lernejo.korekto.grader.travel_agency;
 
 import com.github.lernejo.korekto.toolkit.GradingConfiguration;
 import com.github.lernejo.korekto.toolkit.GradingContext;
+import retrofit2.Retrofit;
 
 import java.util.Random;
 import java.util.function.Supplier;
@@ -13,16 +14,30 @@ public class LaunchingContext extends GradingContext {
 
     public final TravelAgencyApiClient travelAgencyApiClient;
     public final PredictionApiClient predictionApiClient;
+    public final int predictionServerPort = 7000 + RANDOM.nextInt(600);
+    public final int siteServerPort = 9000 + RANDOM.nextInt(600);
+    public final long serverStartTimeout = Long.parseLong(System.getProperty("SERVER_START_TIMEOUT", "40"));
+
     private final Supplier<SilentJacksonConverterFactory.ExceptionHolder> exceptionHolderSupplier;
     private boolean compilationFailed;
     private boolean testFailed;
     private boolean predictionServerFailed;
 
-    LaunchingContext(GradingConfiguration configuration, TravelAgencyApiClient travelAgencyApiClient, PredictionApiClient predictionApiClient, Supplier<SilentJacksonConverterFactory.ExceptionHolder> exceptionHolderSupplier) {
+    LaunchingContext(GradingConfiguration configuration) {
         super(configuration);
-        this.travelAgencyApiClient = travelAgencyApiClient;
-        this.predictionApiClient = predictionApiClient;
-        this.exceptionHolderSupplier = exceptionHolderSupplier;
+        SilentJacksonConverterFactory jacksonConverterFactory = SilentJacksonConverterFactory.create();
+        this.travelAgencyApiClient = new Retrofit.Builder()
+            .baseUrl("http://localhost:" + siteServerPort + "/")
+            .addConverterFactory(jacksonConverterFactory)
+            .build()
+            .create(TravelAgencyApiClient.class);
+
+        this.predictionApiClient = new Retrofit.Builder()
+            .baseUrl("http://localhost:" + predictionServerPort + "/")
+            .addConverterFactory(jacksonConverterFactory)
+            .build()
+            .create(PredictionApiClient.class);
+        this.exceptionHolderSupplier = jacksonConverterFactory::newExceptionHolder;
     }
 
     public void setCompilationFailed() {
