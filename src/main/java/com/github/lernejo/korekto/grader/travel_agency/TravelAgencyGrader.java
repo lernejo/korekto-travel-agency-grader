@@ -4,6 +4,7 @@ import com.github.lernejo.korekto.grader.travel_agency.parts.*;
 import com.github.lernejo.korekto.toolkit.GradePart;
 import com.github.lernejo.korekto.toolkit.Grader;
 import com.github.lernejo.korekto.toolkit.GradingConfiguration;
+import com.github.lernejo.korekto.toolkit.PartGrader;
 import com.github.lernejo.korekto.toolkit.misc.HumanReadableDuration;
 import com.github.lernejo.korekto.toolkit.misc.SubjectForToolkitInclusion;
 import com.github.lernejo.korekto.toolkit.thirdparty.git.GitNature;
@@ -65,13 +66,16 @@ public class TravelAgencyGrader implements Grader<LaunchingContext> {
         }
     }
 
-    private Collection<? extends PartGrader> graders() {
+    private Collection<? extends PartGrader<LaunchingContext>> graders() {
         return List.of(
             new Part1Grader(),
             new Part2Grader(),
             new Part3Grader(),
             new Part4Grader(),
-            new Part5Grader()
+            new Part5Grader(),
+            new Part6Grader(),
+            new PartXGrader(),
+            new PartYGrader()
         );
     }
 }

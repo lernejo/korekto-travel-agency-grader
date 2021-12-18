@@ -21,5 +21,3 @@ jobs:
       - run: mvn -version
       - run: ./mvnw -U test -Dgithub_token=${{ secrets.GH_TOKEN_REPO }} -Dserver_start_timeout=15 -DfailIfNoTests
       - uses: codecov/codecov-action@v2
-        with:
-            token: ${{ secrets.CODECOV_TOKEN }}

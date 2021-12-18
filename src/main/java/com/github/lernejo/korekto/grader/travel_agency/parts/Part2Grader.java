@@ -2,6 +2,7 @@ package com.github.lernejo.korekto.grader.travel_agency.parts;
 
 import com.github.lernejo.korekto.grader.travel_agency.LaunchingContext;
 import com.github.lernejo.korekto.toolkit.GradePart;
+import com.github.lernejo.korekto.toolkit.PartGrader;
 import com.github.lernejo.korekto.toolkit.thirdparty.git.GitNature;
 import com.github.lernejo.korekto.toolkit.thirdparty.github.GitHubNature;
 import com.github.lernejo.korekto.toolkit.thirdparty.github.WorkflowRun;
@@ -13,7 +14,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class Part2Grader implements PartGrader {
+public class Part2Grader implements PartGrader<LaunchingContext> {
     private static final Set<String> mainBranchNames = Set.of("main", "master");
 
     @Override

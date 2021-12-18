@@ -1,5 +1,6 @@
 package com.github.lernejo.korekto.grader.travel_agency;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.lernejo.korekto.toolkit.GradingConfiguration;
 import com.github.lernejo.korekto.toolkit.GradingContext;
 import retrofit2.Retrofit;
@@ -11,6 +12,7 @@ public class LaunchingContext extends GradingContext {
     private static final Random r = new Random();
     // Mutable for tests
     public static RandomSupplier RANDOM = r::nextInt;
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public final TravelAgencyApiClient travelAgencyApiClient;
     public final PredictionApiClient predictionApiClient;
@@ -21,11 +23,11 @@ public class LaunchingContext extends GradingContext {
     private final Supplier<SilentJacksonConverterFactory.ExceptionHolder> exceptionHolderSupplier;
     private boolean compilationFailed;
     private boolean testFailed;
-    private boolean predictionServerFailed;
+    private boolean siteServerFailed;
 
     LaunchingContext(GradingConfiguration configuration) {
         super(configuration);
-        SilentJacksonConverterFactory jacksonConverterFactory = SilentJacksonConverterFactory.create();
+        SilentJacksonConverterFactory jacksonConverterFactory = SilentJacksonConverterFactory.create(OBJECT_MAPPER);
         this.travelAgencyApiClient = new Retrofit.Builder()
             .baseUrl("http://localhost:" + siteServerPort + "/")
             .addConverterFactory(jacksonConverterFactory)
@@ -43,15 +45,15 @@ public class LaunchingContext extends GradingContext {
     public void setCompilationFailed() {
         compilationFailed = true;
         setTestFailed();
+        setSiteServerFailed();
     }
 
     public void setTestFailed() {
         testFailed = true;
-        setPredictionServerFailed();
     }
 
-    public void setPredictionServerFailed() {
-        predictionServerFailed = true;
+    public void setSiteServerFailed() {
+        siteServerFailed = true;
     }
 
     public boolean compilationFailed() {
@@ -60,6 +62,10 @@ public class LaunchingContext extends GradingContext {
 
     public boolean testFailed() {
         return testFailed;
+    }
+
+    public boolean siteServerFailed() {
+        return siteServerFailed;
     }
 
     public SilentJacksonConverterFactory.ExceptionHolder newExceptionHolder() {

@@ -23,10 +23,6 @@ public class SilentJacksonConverterFactory extends Converter.Factory {
 
     private final ObjectMapper mapper;
 
-    public static SilentJacksonConverterFactory create() {
-        return create(new ObjectMapper());
-    }
-
     public static SilentJacksonConverterFactory create(ObjectMapper mapper) {
         if (mapper == null) {
             throw new NullPointerException("mapper == null");

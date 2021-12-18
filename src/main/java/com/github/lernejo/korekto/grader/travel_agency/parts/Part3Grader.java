@@ -2,12 +2,13 @@ package com.github.lernejo.korekto.grader.travel_agency.parts;
 
 import com.github.lernejo.korekto.grader.travel_agency.LaunchingContext;
 import com.github.lernejo.korekto.toolkit.GradePart;
+import com.github.lernejo.korekto.toolkit.PartGrader;
 import com.github.lernejo.korekto.toolkit.misc.Maths;
 import com.github.lernejo.korekto.toolkit.thirdparty.maven.MavenJacocoReport;
 
 import java.util.List;
 
-public class Part3Grader implements PartGrader {
+public class Part3Grader implements PartGrader<LaunchingContext> {
 
     @Override
     public String name() {

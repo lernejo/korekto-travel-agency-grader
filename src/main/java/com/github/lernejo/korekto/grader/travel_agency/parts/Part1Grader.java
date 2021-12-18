@@ -2,6 +2,7 @@ package com.github.lernejo.korekto.grader.travel_agency.parts;
 
 import com.github.lernejo.korekto.grader.travel_agency.LaunchingContext;
 import com.github.lernejo.korekto.toolkit.GradePart;
+import com.github.lernejo.korekto.toolkit.PartGrader;
 import com.github.lernejo.korekto.toolkit.thirdparty.maven.MavenExecutor;
 import com.github.lernejo.korekto.toolkit.thirdparty.maven.MavenInvocationResult;
 import com.github.lernejo.korekto.toolkit.thirdparty.maven.PomModifier;
@@ -11,7 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-public class Part1Grader implements PartGrader {
+public class Part1Grader implements PartGrader<LaunchingContext> {
 
     static String sbPluginGav = "org.springframework.boot:spring-boot-maven-plugin:2.6.1";
 

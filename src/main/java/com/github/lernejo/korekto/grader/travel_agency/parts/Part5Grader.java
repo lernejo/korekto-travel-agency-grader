@@ -4,6 +4,7 @@ import com.github.lernejo.korekto.grader.travel_agency.LaunchingContext;
 import com.github.lernejo.korekto.grader.travel_agency.PredictionApiClient;
 import com.github.lernejo.korekto.grader.travel_agency.parts.Dataset.TempBoundaries;
 import com.github.lernejo.korekto.toolkit.GradePart;
+import com.github.lernejo.korekto.toolkit.PartGrader;
 import com.github.lernejo.korekto.toolkit.misc.Ports;
 import com.github.lernejo.korekto.toolkit.thirdparty.maven.MavenExecutionHandle;
 import com.github.lernejo.korekto.toolkit.thirdparty.maven.MavenExecutor;
@@ -16,7 +17,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 
 
-public class Part5Grader implements PartGrader {
+public class Part5Grader implements PartGrader<LaunchingContext> {
 
     @Override
     public String name() {

@@ -3,6 +3,7 @@ package com.github.lernejo.korekto.grader.travel_agency.parts;
 import com.github.lernejo.korekto.grader.travel_agency.LaunchingContext;
 import com.github.lernejo.korekto.grader.travel_agency.TravelAgencyApiClient;
 import com.github.lernejo.korekto.toolkit.GradePart;
+import com.github.lernejo.korekto.toolkit.PartGrader;
 import com.github.lernejo.korekto.toolkit.misc.Ports;
 import com.github.lernejo.korekto.toolkit.thirdparty.maven.MavenExecutionHandle;
 import com.github.lernejo.korekto.toolkit.thirdparty.maven.MavenExecutor;
@@ -15,7 +16,7 @@ import java.util.Locale;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 
-public class Part4Grader implements PartGrader {
+public class Part4Grader implements PartGrader<LaunchingContext> {
 
     @Override
     public String name() {
@@ -41,10 +42,10 @@ public class Part4Grader implements PartGrader {
             double grade = maxGrade();
             List<String> errors = new ArrayList<>();
 
-            String inscriptionQuery = "POST `/api/inscription`";
 
             TravelAgencyApiClient.Inscription inscription = generateInscription();
-            String travelsQuery = "GET `/api/travels?userName=" + inscription.userName() + "`";
+
+            String inscriptionQuery = "POST `/api/inscription`";
             try {
                 Response<Void> inscriptionResponse = context.travelAgencyApiClient.postInscription(inscription).execute();
                 if (!inscriptionResponse.isSuccessful()) {
@@ -52,35 +53,43 @@ public class Part4Grader implements PartGrader {
                     errors.add("Unsuccessful response of " + inscriptionQuery + ": " + inscriptionResponse.code());
                 }
             } catch (IOException e) {
-                return result(List.of("Failed to call **site** " + inscriptionQuery + ": " + e.getMessage()), 0.0D);
+                grade = 0;
+                errors.add("Failed to call **site** " + inscriptionQuery + ": " + e.getMessage());
             }
 
-            try {
+            String travelsQuery = "GET `/api/travels?userName=" + inscription.userName() + "`";
+            try (var exHolder = context.newExceptionHolder()) {
                 Response<List<TravelAgencyApiClient.Travel>> travelsResponse = context.travelAgencyApiClient.getTravels(inscription.userName()).execute();
                 if (!travelsResponse.isSuccessful()) {
                     grade -= maxGrade() / 2;
                     errors.add("Unsuccessful response of " + travelsQuery + ": " + travelsResponse.code());
-                } else if (travelsResponse.body().isEmpty()) {
-                    grade -= maxGrade() * (1.0 / 3);
-                    errors.add("Empty response of " + travelsQuery + ": []");
+                } else if (exHolder.getLatestDeserializationProblem() != null) {
+                    grade -= maxGrade() * (2.0 / 3);
+                    errors.add("Bad response payload expected something like:\n```\n" + TravelAgencyApiClient.SAMPLE_RESPONSE_PAYLOAD + "\n```\nBut got:\n```\n" + exHolder.getLatestDeserializationProblem().rawBody() + "\n```");
                 }
             } catch (IOException e) {
-                return result(List.of("Failed to call **site** " + travelsQuery + ": " + e.getMessage()), 0.0D);
+                grade = 0;
+                errors.add("Failed to call **site** " + travelsQuery + ": " + e.getMessage());
+            }
+
+            if (!errors.isEmpty()) {
+                context.setSiteServerFailed();
             }
 
             return result(errors, grade);
         } catch (CancellationException e) {
+            context.setSiteServerFailed();
             return result(List.of("Server failed to start within " + context.serverStartTimeout + " sec."), 0.0D);
         } finally {
             Ports.waitForPortToBeFreed(context.siteServerPort, TimeUnit.SECONDS, 5L);
         }
     }
 
-    private TravelAgencyApiClient.Inscription generateInscription() {
+    private static TravelAgencyApiClient.Inscription generateInscription() {
         String username = LaunchingContext.RANDOM.nextUuid().toString().toLowerCase(Locale.ROOT);
         return new TravelAgencyApiClient.Inscription(
-            username,
             username + "@lernejo.fr",
+            username,
             Dataset.getOne().country(),
             LaunchingContext.RANDOM.nextBoolean() ? TravelAgencyApiClient.WeatherExpectation.WARMER : TravelAgencyApiClient.WeatherExpectation.COLDER,
             LaunchingContext.RANDOM.nextInt(6) + 4
