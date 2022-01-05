@@ -73,7 +73,8 @@ public class TravelAgencyGrader implements Grader<LaunchingContext> {
             new Part3Grader(),
             new Part4Grader(),
             new Part5Grader(),
-            new Part6Grader(),
+            new Part6Grader(TravelAgencyApiClient.WeatherExpectation.COLDER),
+            new Part6Grader(TravelAgencyApiClient.WeatherExpectation.WARMER),
             new PartXGrader(),
             new PartYGrader()
         );

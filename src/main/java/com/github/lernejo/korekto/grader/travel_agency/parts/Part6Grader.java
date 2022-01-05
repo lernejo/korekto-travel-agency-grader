@@ -8,6 +8,8 @@ import com.github.lernejo.korekto.toolkit.PartGrader;
 import com.github.lernejo.korekto.toolkit.misc.Ports;
 import com.github.lernejo.korekto.toolkit.thirdparty.maven.MavenExecutionHandle;
 import com.github.lernejo.korekto.toolkit.thirdparty.maven.MavenExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 
 import java.io.IOException;
@@ -22,6 +24,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Part6Grader implements PartGrader<LaunchingContext> {
+
+    private static final Logger logger = LoggerFactory.getLogger(Part6Grader.class);
 
     private static List<String> countries = List.of(
         "Bahrain",
@@ -48,14 +52,20 @@ public class Part6Grader implements PartGrader<LaunchingContext> {
         "Gabon"
     );
 
+    private final TravelAgencyApiClient.WeatherExpectation weatherExpectation;
+
+    public Part6Grader(TravelAgencyApiClient.WeatherExpectation weatherExpectation) {
+        this.weatherExpectation = weatherExpectation;
+    }
+
     @Override
     public String name() {
-        return "Part 6 - HTTP client and data coherence";
+        return "Part 6 - HTTP client and data coherence (" + weatherExpectation.name().toLowerCase(Locale.ROOT) + ")";
     }
 
     @Override
     public Double maxGrade() {
-        return 4.0D;
+        return 2.0D;
     }
 
     @Override
@@ -69,7 +79,9 @@ public class Part6Grader implements PartGrader<LaunchingContext> {
         TravelAgencyApiClient.Inscription inscription = generateInscription();
 
         int userCountryTemp = LaunchingContext.RANDOM.nextInt(15) + 15;
+        logger.info("Using " + inscription);
         Set<String> expectedMatchingCountries = buildMatchingCountries(inscription.userCountry());
+        logger.info("Matching countries " + expectedMatchingCountries);
         Function<String, PredictionApiClient.Prediction> predictionFunction = buildPredictionFunction(userCountryTemp, expectedMatchingCountries, inscription);
 
         try (PredictionServer predictionServer = new PredictionServer(context.predictionServerPort, predictionFunction);
@@ -124,13 +136,16 @@ public class Part6Grader implements PartGrader<LaunchingContext> {
     private static Function<String, PredictionApiClient.Prediction> buildPredictionFunction(int userCountryTemp, Set<String> matchingCountries, TravelAgencyApiClient.Inscription inscription) {
         return country -> {
             String lCountry = country.toLowerCase(Locale.ROOT);
+            final PredictionApiClient.Prediction prediction;
             if (inscription.userCountry().equals(lCountry) || !matchingCountries.contains(lCountry)) {
-                return buildPrediction(country, userCountryTemp);
+                prediction = buildPrediction(country, userCountryTemp);
             } else {
                 int diff = inscription.weatherExpectation() == TravelAgencyApiClient.WeatherExpectation.WARMER ? inscription.minimumTemperatureDistance() + 2 : (-inscription.minimumTemperatureDistance() - 2);
                 double matchingTemp = userCountryTemp + diff;
-                return buildPrediction(country, matchingTemp);
+                prediction = buildPrediction(country, matchingTemp);
             }
+            //logger.info("" + prediction);
+            return prediction;
         };
     }
 
@@ -145,11 +160,10 @@ public class Part6Grader implements PartGrader<LaunchingContext> {
         ));
     }
 
-    private static TravelAgencyApiClient.Inscription generateInscription() {
+    private TravelAgencyApiClient.Inscription generateInscription() {
         String userName = LaunchingContext.RANDOM.nextUuid().toString().toLowerCase(Locale.ROOT);
         String userCountry = countries.get(LaunchingContext.RANDOM.nextInt(countries.size() - 1));
         int minimumTemperatureDistance = LaunchingContext.RANDOM.nextInt(10) + 6;
-        TravelAgencyApiClient.WeatherExpectation weatherExpectation = LaunchingContext.RANDOM.nextBoolean() ? TravelAgencyApiClient.WeatherExpectation.WARMER : TravelAgencyApiClient.WeatherExpectation.COLDER;
 
         return new TravelAgencyApiClient.Inscription(
             userName + "@lernejo.fr",
