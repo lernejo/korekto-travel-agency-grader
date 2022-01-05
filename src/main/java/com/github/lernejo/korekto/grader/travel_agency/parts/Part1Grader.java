@@ -48,6 +48,8 @@ public class Part1Grader implements PartGrader<LaunchingContext> {
         } else {
             // Download all needed deps without timer
             MavenExecutor.executeGoal(context.getExercise(), context.getConfiguration().getWorkspace(), sbPluginGav + ":help");
+            // Install project dependencies to be able to execute a module solely even if it depends on another
+            MavenExecutor.executeGoal(context.getExercise(), context.getConfiguration().getWorkspace(), "install");
 
             MavenInvocationResult testRun = MavenExecutor.executeGoal(context.getExercise(), context.getConfiguration().getWorkspace(), "verify");
             if (testRun.getStatus() != MavenInvocationResult.Status.OK) {
