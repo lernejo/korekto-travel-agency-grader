@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 class PredictionServer implements AutoCloseable {
 
     private final int port;
-    private final Function<String, PredictionApiClient.Prediction> predictionFunction;
+    private final Function<String, Optional<PredictionApiClient.Prediction>> predictionFunction;
     private final HttpServer server;
     private final ExecutorService executorService;
     public final List<HttpEx> exchanges = new ArrayList<>();
@@ -32,24 +32,27 @@ class PredictionServer implements AutoCloseable {
         this(port, PredictionServer::defaultPrediction);
     }
 
-    private static PredictionApiClient.Prediction defaultPrediction(String country) {
+    private static Optional<PredictionApiClient.Prediction> defaultPrediction(String country) {
         Dataset.TempBoundaries tempBoundaries = Dataset.getByCountry(country);
+        if(tempBoundaries == null) {
+            return Optional.empty();
+        }
         String date1 = LocalDate.now().toString();
         double temp1 = generateTemp(tempBoundaries);
         String date2 = LocalDate.now().minusDays(1).toString();
         double temp2 = generateTemp(tempBoundaries);
 
-        return new PredictionApiClient.Prediction(country, List.of(
+        return Optional.of(new PredictionApiClient.Prediction(country, List.of(
             new PredictionApiClient.TempPoint(date1, temp1),
             new PredictionApiClient.TempPoint(date2, temp2)
-        ));
+        )));
     }
 
     private static double generateTemp(Dataset.TempBoundaries tempBoundaries) {
         return LaunchingContext.RANDOM.nextInt((int) ((Math.round(tempBoundaries.max()) - Math.round(tempBoundaries.min())) * 100)) / 100 + tempBoundaries.min();
     }
 
-    PredictionServer(int port, Function<String, PredictionApiClient.Prediction> predictionFunction) {
+    PredictionServer(int port, Function<String, Optional<PredictionApiClient.Prediction>> predictionFunction) {
         this.port = port;
         this.predictionFunction = predictionFunction;
         try {
@@ -82,17 +85,21 @@ class PredictionServer implements AutoCloseable {
             if ("GET".equals(exchange.getRequestMethod())) {
                 Map<String, String> query = parseQuery(exchange.getRequestURI());
                 if (query.containsKey("country")) {
-                    PredictionApiClient.Prediction body = predictionFunction.apply(query.get("country"));
-                    String rawBody = LaunchingContext.OBJECT_MAPPER.writeValueAsString(body);
-                    int code = 200;
-                    exchange.getResponseHeaders().add("Content-Type", "application/json");
-                    exchange.sendResponseHeaders(code, rawBody.length());
-                    logs.add(new HttpEx(
-                        new HttpEx.Request(exchange.getRequestMethod().toUpperCase(), exchange.getRequestURI().toString(), toMap(exchange.getRequestHeaders()), null),
-                        new HttpEx.Response(code, toMap(exchange.getResponseHeaders()), rawBody)));
-                    OutputStream os = exchange.getResponseBody();
-                    os.write(rawBody.getBytes(StandardCharsets.UTF_8));
-                    os.close();
+                    Optional<PredictionApiClient.Prediction> body = predictionFunction.apply(query.get("country"));
+                    if(body.isEmpty()) {
+                        notFound(exchange, readInputStream(exchange.getRequestBody()));
+                    } else {
+                        String rawBody = LaunchingContext.OBJECT_MAPPER.writeValueAsString(body.get());
+                        int code = 200;
+                        exchange.getResponseHeaders().add("Content-Type", "application/json");
+                        exchange.sendResponseHeaders(code, rawBody.length());
+                        logs.add(new HttpEx(
+                            new HttpEx.Request(exchange.getRequestMethod().toUpperCase(), exchange.getRequestURI().toString(), toMap(exchange.getRequestHeaders()), null),
+                            new HttpEx.Response(code, toMap(exchange.getResponseHeaders()), rawBody)));
+                        OutputStream os = exchange.getResponseBody();
+                        os.write(rawBody.getBytes(StandardCharsets.UTF_8));
+                        os.close();
+                    }
                 } else {
                     badRequest(exchange, readInputStream(exchange.getRequestBody()));
                 }

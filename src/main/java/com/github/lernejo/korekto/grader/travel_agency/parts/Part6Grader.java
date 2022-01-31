@@ -14,10 +14,7 @@ import retrofit2.Response;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -82,7 +79,7 @@ public class Part6Grader implements PartGrader<LaunchingContext> {
         logger.info("Using " + inscription);
         Set<String> expectedMatchingCountries = buildMatchingCountries(inscription.userCountry());
         logger.info("Matching countries " + expectedMatchingCountries);
-        Function<String, PredictionApiClient.Prediction> predictionFunction = buildPredictionFunction(userCountryTemp, expectedMatchingCountries, inscription);
+        var predictionFunction = buildPredictionFunction(userCountryTemp, expectedMatchingCountries, inscription);
 
         try (PredictionServer predictionServer = new PredictionServer(context.predictionServerPort, predictionFunction);
              MavenExecutionHandle ignored = MavenExecutor.executeGoalAsync(context.getExercise(), context.getConfiguration().getWorkspace(),
@@ -133,7 +130,7 @@ public class Part6Grader implements PartGrader<LaunchingContext> {
         }
     }
 
-    private static Function<String, PredictionApiClient.Prediction> buildPredictionFunction(int userCountryTemp, Set<String> matchingCountries, TravelAgencyApiClient.Inscription inscription) {
+    private static Function<String, Optional<PredictionApiClient.Prediction>> buildPredictionFunction(int userCountryTemp, Set<String> matchingCountries, TravelAgencyApiClient.Inscription inscription) {
         return country -> {
             String lCountry = country.toLowerCase(Locale.ROOT);
             final PredictionApiClient.Prediction prediction;
@@ -145,7 +142,7 @@ public class Part6Grader implements PartGrader<LaunchingContext> {
                 prediction = buildPrediction(country, matchingTemp);
             }
             //logger.info("" + prediction);
-            return prediction;
+            return Optional.of(prediction);
         };
     }
 

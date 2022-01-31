@@ -21,8 +21,8 @@ public interface TravelAgencyApiClient {
 
     @POST("api/inscription")
     @Headers({
-        "Accept:application/json",
-        "Content-Type:application/json"})
+        "Accept: application/json",
+        "Content-Type: application/json"})
     Call<Void> postInscription(@Body Inscription inscription);
 
 
