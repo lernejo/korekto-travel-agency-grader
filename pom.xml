@@ -13,7 +13,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
 
-        <korekto-toolkit.version>1.3.5</korekto-toolkit.version>
+        <korekto-toolkit.version>1.3.6</korekto-toolkit.version>
         <http-tack.version>0.0.3</http-tack.version>
         <retrofit.version>2.9.0</retrofit.version>
         <jackson.version>2.13.4.2</jackson.version>
