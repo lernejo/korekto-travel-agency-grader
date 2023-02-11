@@ -14,7 +14,7 @@ class Dataset {
     );
 
     static TempBoundaries getOne() {
-        return tempBoundaries.get(LaunchingContext.RANDOM.nextInt(tempBoundaries.size() - 1));
+        return tempBoundaries.get(LaunchingContext.getRandomSource().nextInt(tempBoundaries.size() - 1));
     }
 
     static TempBoundaries getByCountry(String country) {

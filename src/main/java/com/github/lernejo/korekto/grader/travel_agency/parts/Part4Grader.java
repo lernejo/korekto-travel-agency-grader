@@ -30,7 +30,7 @@ public class Part4Grader implements PartGrader<LaunchingContext> {
 
     @Override
     public GradePart grade(LaunchingContext context) {
-        if (context.compilationFailed()) {
+        if (context.hasCompilationFailed()) {
             return result(List.of("Not trying to start **site** server as compilation failed"), 0.0D);
         }
 
@@ -86,13 +86,13 @@ public class Part4Grader implements PartGrader<LaunchingContext> {
     }
 
     private static TravelAgencyApiClient.Inscription generateInscription() {
-        String username = LaunchingContext.RANDOM.nextUuid().toString().toLowerCase(Locale.ROOT);
+        String username = LaunchingContext.getRandomSource().nextUuid().toString().toLowerCase(Locale.ROOT);
         return new TravelAgencyApiClient.Inscription(
             username + "@lernejo.fr",
             username,
             Dataset.getOne().country(),
-            LaunchingContext.RANDOM.nextBoolean() ? TravelAgencyApiClient.WeatherExpectation.WARMER : TravelAgencyApiClient.WeatherExpectation.COLDER,
-            LaunchingContext.RANDOM.nextInt(6) + 4
+            LaunchingContext.getRandomSource().nextBoolean() ? TravelAgencyApiClient.WeatherExpectation.WARMER : TravelAgencyApiClient.WeatherExpectation.COLDER,
+            LaunchingContext.getRandomSource().nextInt(6) + 4
         );
     }
 }

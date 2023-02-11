@@ -31,7 +31,7 @@ public class Part5Grader implements PartGrader<LaunchingContext> {
 
     @Override
     public GradePart grade(LaunchingContext context) {
-        if (context.compilationFailed()) {
+        if (context.hasCompilationFailed()) {
             return result(List.of("Not trying to start **prediction-engine** server as compilation failed"), 0.0D);
         }
 

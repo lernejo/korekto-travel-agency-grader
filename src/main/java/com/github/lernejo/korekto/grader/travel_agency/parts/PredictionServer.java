@@ -49,7 +49,7 @@ class PredictionServer implements AutoCloseable {
     }
 
     private static double generateTemp(Dataset.TempBoundaries tempBoundaries) {
-        return LaunchingContext.RANDOM.nextInt((int) ((Math.round(tempBoundaries.max()) - Math.round(tempBoundaries.min())) * 100)) / 100 + tempBoundaries.min();
+        return LaunchingContext.getRandomSource().nextInt((int) ((Math.round(tempBoundaries.max()) - Math.round(tempBoundaries.min())) * 100)) / 100 + tempBoundaries.min();
     }
 
     PredictionServer(int port, Function<String, Optional<PredictionApiClient.Prediction>> predictionFunction) {

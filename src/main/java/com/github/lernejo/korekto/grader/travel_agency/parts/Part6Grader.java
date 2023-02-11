@@ -67,7 +67,7 @@ public class Part6Grader implements PartGrader<LaunchingContext> {
 
     @Override
     public GradePart grade(LaunchingContext context) {
-        if (context.compilationFailed()) {
+        if (context.hasCompilationFailed()) {
             return result(List.of("Not trying to start **site** server as compilation failed"), 0.0D);
         }
         if (context.siteServerFailed()) {
@@ -75,7 +75,7 @@ public class Part6Grader implements PartGrader<LaunchingContext> {
         }
         TravelAgencyApiClient.Inscription inscription = generateInscription();
 
-        int userCountryTemp = LaunchingContext.RANDOM.nextInt(15) + 15;
+        int userCountryTemp = LaunchingContext.getRandomSource().nextInt(15) + 15;
         logger.info("Using " + inscription);
         Set<String> expectedMatchingCountries = buildMatchingCountries(inscription.userCountry());
         logger.info("Matching countries " + expectedMatchingCountries);
@@ -158,9 +158,9 @@ public class Part6Grader implements PartGrader<LaunchingContext> {
     }
 
     private TravelAgencyApiClient.Inscription generateInscription() {
-        String userName = LaunchingContext.RANDOM.nextUuid().toString().toLowerCase(Locale.ROOT);
-        String userCountry = countries.get(LaunchingContext.RANDOM.nextInt(countries.size() - 1));
-        int minimumTemperatureDistance = LaunchingContext.RANDOM.nextInt(10) + 6;
+        String userName = LaunchingContext.getRandomSource().nextUuid().toString().toLowerCase(Locale.ROOT);
+        String userCountry = countries.get(LaunchingContext.getRandomSource().nextInt(countries.size() - 1));
+        int minimumTemperatureDistance = LaunchingContext.getRandomSource().nextInt(10) + 6;
 
         return new TravelAgencyApiClient.Inscription(
             userName + "@lernejo.fr",
@@ -171,10 +171,10 @@ public class Part6Grader implements PartGrader<LaunchingContext> {
     }
 
     private Set<String> buildMatchingCountries(String userCountry) {
-        int nbrOfMatchingCountries = LaunchingContext.RANDOM.nextInt(4) + 2;
+        int nbrOfMatchingCountries = LaunchingContext.getRandomSource().nextInt(4) + 2;
         Set<String> matchingCountries = new HashSet<>();
         do {
-            String country = countries.get(LaunchingContext.RANDOM.nextInt(countries.size() - 1)).toLowerCase(Locale.ROOT);
+            String country = countries.get(LaunchingContext.getRandomSource().nextInt(countries.size() - 1)).toLowerCase(Locale.ROOT);
             if (!userCountry.equals(country) && !matchingCountries.contains(country)) {
                 matchingCountries.add(country);
             }
