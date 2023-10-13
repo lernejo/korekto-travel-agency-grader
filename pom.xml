@@ -16,7 +16,7 @@
         <korekto-toolkit.version>1.3.9</korekto-toolkit.version>
         <http-tack.version>0.0.3</http-tack.version>
         <retrofit.version>2.9.0</retrofit.version>
-        <jackson.version>2.15.2</jackson.version>
+        <jackson.version>2.15.3</jackson.version>
         <logback-classic.version>1.4.11</logback-classic.version>
 
         <junit.version>5.10.0</junit.version>
