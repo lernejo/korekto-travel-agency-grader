@@ -20,7 +20,7 @@
         <logback-classic.version>1.5.6</logback-classic.version>
 
         <junit.version>5.10.3</junit.version>
-        <assertj.version>3.26.0</assertj.version>
+        <assertj.version>3.26.3</assertj.version>
 
         <exec-maven-plugin.version>3.3.0</exec-maven-plugin.version>
         <maven-surefire-plugin.version>3.3.0</maven-surefire-plugin.version>
