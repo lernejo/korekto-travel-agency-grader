@@ -17,7 +17,7 @@
         <http-tack.version>0.0.3</http-tack.version>
         <retrofit.version>3.0.0</retrofit.version>
         <jackson.version>2.20.0</jackson.version>
-        <logback-classic.version>1.5.19</logback-classic.version>
+        <logback-classic.version>1.5.20</logback-classic.version>
 
         <junit.version>6.0.0</junit.version>
         <assertj.version>3.27.6</assertj.version>
